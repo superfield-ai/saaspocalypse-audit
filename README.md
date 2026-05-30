@@ -40,16 +40,36 @@ is currently making, not to pass a checklist.
 
 ### Step 1 — Install the skill
 
-Run this in your terminal. It installs the audit as a Claude Code skill:
+**Global install** (recommended — available in every project):
 
 ```bash
-git clone https://github.com/superfield-ai/saaspocalypse-audit /tmp/saaspocalypse-audit && \
-cp -r /tmp/saaspocalypse-audit ~/.claude/skills/saaspocalypse-audit && \
-rm -rf /tmp/saaspocalypse-audit && \
-echo "Installed. Run /saaspocalypse-audit from any project directory."
+mkdir -p ~/.claude/skills/saaspocalypse-audit && \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/heads/main.tar.gz \
+  | tar -xz --strip-components=1 -C ~/.claude/skills/saaspocalypse-audit && \
+echo "Installed globally. Run /saaspocalypse-audit from any project directory."
 ```
 
-Requires [Claude Code](https://claude.ai/code) and [git](https://git-scm.com).
+**Project install** (scoped to one project — run from your project root):
+
+```bash
+mkdir -p .claude/skills/saaspocalypse-audit && \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/heads/main.tar.gz \
+  | tar -xz --strip-components=1 -C .claude/skills/saaspocalypse-audit && \
+echo "Installed for this project."
+```
+
+**Pin to a specific version** (replace `v1.0.0` with the version you want):
+
+```bash
+mkdir -p ~/.claude/skills/saaspocalypse-audit && \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/v1.0.0.tar.gz \
+  | tar -xz --strip-components=1 -C ~/.claude/skills/saaspocalypse-audit && \
+echo "Installed v1.0.0."
+```
+
+**Update to latest** — re-run the global install command. It overwrites in place.
+
+Requires [Claude Code](https://claude.ai/code). No git required.
 
 ### Step 2 — Run the audit
 

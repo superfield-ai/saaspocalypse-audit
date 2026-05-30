@@ -20,7 +20,44 @@ whether individual lines of code are correct.
 
 ---
 
-## Phase 0 — Source Access Gate (run this before anything else)
+## Phase 0 — Preflight (run this before anything else)
+
+### Version check
+
+Before doing anything else, check whether a newer version of this skill is
+available:
+
+```bash
+# Locate the skill directory (global install or project install)
+SKILL_DIR=""
+if [ -f "$HOME/.claude/skills/saaspocalypse-audit/VERSION" ]; then
+  SKILL_DIR="$HOME/.claude/skills/saaspocalypse-audit"
+elif [ -f ".claude/skills/saaspocalypse-audit/VERSION" ]; then
+  SKILL_DIR=".claude/skills/saaspocalypse-audit"
+fi
+
+if [ -n "$SKILL_DIR" ]; then
+  INSTALLED=$(cat "$SKILL_DIR/VERSION" 2>/dev/null | tr -d '[:space:]')
+  LATEST=$(curl -fsSL --max-time 3 \
+    https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/VERSION \
+    2>/dev/null | tr -d '[:space:]')
+  if [ -n "$LATEST" ] && [ "$INSTALLED" != "$LATEST" ]; then
+    echo "⚠ Update available: $INSTALLED → $LATEST"
+    echo "  Re-run the install command to update before continuing."
+  fi
+fi
+```
+
+If a newer version is detected, surface the update notice to the user and
+**pause** — ask if they want to update first or continue with the installed
+version. Do not silently proceed on a stale version; the categories and
+incident anchors may have changed.
+
+If the curl fails (no network, timeout), skip the check silently and proceed.
+
+---
+
+## Phase 0 — Source Access Gate
 
 The audit requires access to the actual project source. Do not proceed without
 it. Do not ask questions as a substitute for reading the code.
