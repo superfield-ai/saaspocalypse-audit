@@ -8,6 +8,30 @@ putting it in front of real users, real customers, or regulators.
 
 ---
 
+## Quick start
+
+Paste this into your coding agent:
+
+```
+Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/agent-bootstrap.md
+```
+
+Then run the audit from your project directory:
+
+```
+/saaspocalypse-audit
+```
+
+Or audit a remote repo:
+
+```
+/saaspocalypse-audit https://github.com/your-org/your-repo
+```
+
+Requires [Claude Code](https://claude.ai/code).
+
+---
+
 ## What this is
 
 An audit that reads your actual source code and scores nine categories of
@@ -35,71 +59,6 @@ is currently making, not to pass a checklist.
 | 7 | Test Soundness |
 | 8 | Observability & Operations |
 | 9 | AI & LLM Architecture |
-
-## How to run it
-
-### Step 1 — Install the skill
-
-**Paste this into your coding agent:**
-
-```
-Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/agent-bootstrap.md
-```
-
-Or install manually from your terminal:
-
-**Project install** (default — scoped to this project):
-
-```bash
-SAAS_VERSION=$(curl -fsSL https://api.github.com/repos/superfield-ai/saaspocalypse-audit/releases/latest | grep '"tag_name"' | cut -d'"' -f4) && \
-mkdir -p .claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
-  | tar -xz --strip-components=1 -C .claude/skills/saaspocalypse-audit && \
-echo "Installed ${SAAS_VERSION} for this project."
-```
-
-**Global install** (available in every project on this machine):
-
-```bash
-SAAS_VERSION=$(curl -fsSL https://api.github.com/repos/superfield-ai/saaspocalypse-audit/releases/latest | grep '"tag_name"' | cut -d'"' -f4) && \
-mkdir -p ~/.claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
-  | tar -xz --strip-components=1 -C ~/.claude/skills/saaspocalypse-audit && \
-echo "Installed ${SAAS_VERSION} globally."
-```
-
-**Update** — re-run either command. It installs the latest release and overwrites in place.
-
-**Pin to a specific version** (replace `v0.0.1` with any release tag):
-
-```bash
-SAAS_VERSION=v0.0.1 && \
-mkdir -p .claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
-  | tar -xz --strip-components=1 -C .claude/skills/saaspocalypse-audit && \
-echo "Installed ${SAAS_VERSION}."
-```
-
-Requires [Claude Code](https://claude.ai/code). No git required.
-
-### Step 2 — Run the audit
-
-**Option A — From your project directory:**
-
-Navigate to the root of the project you want to audit, open Claude Code, and run:
-
-```
-/saaspocalypse-audit
-```
-
-**Option B — Pass a git URL:**
-
-```
-/saaspocalypse-audit https://github.com/your-org/your-repo
-```
-
-The audit clones the repo, runs the full analysis, then removes the clone.
-Works with any repo your git credentials can reach.
 
 ## What the audit will not do
 
