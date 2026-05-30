@@ -60,29 +60,87 @@ was built may not be available.
 
 ---
 
-## Real-world incident anchor (use for C or D grades)
+## Real-world incident anchors (use for C or D grades)
 
-**GitLab, January 2017.**
+---
 
-A GitLab engineer was performing routine database maintenance at 11pm. Working
-tired, on the wrong terminal window, they ran a deletion command against the
-production database server instead of the staging server. The command deleted
-the primary database for GitLab.com.
+### GitLab, January 2017 — Eighteen hours of downtime and six hours of permanent data loss because five backup systems had never been tested.
 
-GitLab had five separate backup mechanisms. When they attempted recovery:
-- One backup system had not been running — it had failed silently months earlier
-- A second backup method was not enabled for the database type in use
-- A third produced snapshots six hours old
-- A fourth was too slow to recover in time
-- Only the fifth worked, and it recovered data that was eighteen hours old
+**The design error:** No architectural requirement that backup restoration be
+proven to work. The system had five separate backup mechanisms and the team
+believed they were covered. Not one mechanism had a tested, documented
+restoration path.
 
-GitLab.com was offline for eighteen hours. They lost six hours of customer
-data — commits, issues, merge requests — permanently. They ran their recovery
-publicly in a live stream because there was nothing else they could do.
+**Why vibe-coders make the same mistake:** AI-assisted builders follow prompts
+like "set up automated backups" and treat the presence of a backup job as the
+feature being done. Testing restoration is a separate, unglamorous task that
+doesn't show up in a demo and never makes it into the MVP scope.
 
-The backups existed. They had never been tested. "Backup untested is not a
-backup" — this is a design decision, not an operational one. The architecture
-had no requirement that restoration be proven to work.
+**What happened:** A GitLab engineer was performing routine database maintenance
+late at night. Working tired, on the wrong terminal window, they ran a deletion
+command against the production database instead of the staging server. GitLab.com
+went down. When the team attempted recovery, one backup system had silently
+failed months earlier and no one had noticed. A second method was not enabled
+for the database type in use. A third produced snapshots that were six hours
+old. A fourth was too slow to be usable. Only the fifth worked, and it had data
+that was eighteen hours old. GitLab.com was offline for eighteen hours. Six
+hours of customer commits, issues, and merge requests were gone permanently.
+The engineers ran the recovery as a public live stream because there was nothing
+else to do.
+
+---
+
+### Capital One, July 2019 — A misconfigured firewall exposed AWS credentials with excessive permissions, leading to the exfiltration of 100 million customer records.
+
+**The design error:** IAM roles were granted far broader permissions than the
+workload required. The web application server needed to do a narrow set of
+things; its IAM role gave it the ability to list and download from S3 buckets
+across the account. When the server was compromised, that over-permission became
+the attacker's entire toolkit.
+
+**Why vibe-coders make the same mistake:** When getting cloud infrastructure
+working, the path of least resistance is to grant broad permissions — often
+AdministratorAccess or a wildcard S3 policy — to stop getting access-denied
+errors during development. AI code assistants frequently suggest permissive IAM
+policies because they produce working code faster. Tightening permissions to
+the minimum required is a separate hardening pass that never gets scheduled.
+
+**What happened:** An attacker exploited a misconfigured web application
+firewall to send a server-side request forgery (SSRF) request — essentially
+tricking the server into making an internal HTTP request to the AWS metadata
+service. That service returned the temporary IAM credentials attached to the
+server's role. Because those credentials had been granted the ability to list
+and download from S3 buckets across the AWS account, the attacker spent hours
+downloading over 100 million customer records including names, addresses, credit
+scores, and Social Security numbers. A proper least-privilege policy — one
+scoped to exactly the buckets and actions the web server legitimately needed —
+would have made those credentials useless.
+
+---
+
+### Cloudflare, November 2023 — Credentials that survived a known breach were used to access internal source code repositories weeks later.
+
+**The design error:** No credential rotation policy. An access token issued at
+one point in time was assumed valid indefinitely. When the upstream identity
+provider (Okta) was compromised and the compromise became public, there was no
+mechanism — and no process — to systematically invalidate tokens that had been
+issued through it.
+
+**Why vibe-coders make the same mistake:** Rotating credentials and API tokens
+is maintenance work that delivers no new features. AI-assisted developers set
+up integrations once, use long-lived tokens because they are simpler to manage,
+and move on. The token is never mentioned in the codebase again until something
+goes wrong. There is also no natural moment in a build cycle that prompts the
+question "what tokens have we issued that might be compromised upstream?"
+
+**What happened:** Attackers had previously compromised Okta, the identity
+provider used by many companies including Cloudflare. Cloudflare was aware of
+the Okta breach. However, an access token that had been issued via Okta was
+never rotated after the breach was disclosed. Weeks later, on Thanksgiving, the
+attackers used that token to authenticate into Cloudflare's internal Atlassian
+environment and access source code repositories. The entry point was not a
+sophisticated attack on Cloudflare's systems — it was a key that should have
+been revoked and was not.
 
 ---
 

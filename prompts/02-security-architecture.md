@@ -60,26 +60,86 @@ with only an application-layer password as protection.
 
 ---
 
-## Real-world incident anchor (use for C or D grades)
+## Real-world incident anchors (use for C or D grades)
 
-**Colonial Pipeline, May 2021.**
+---
 
-Colonial Pipeline carries 45 percent of the fuel used on the East Coast of the
-United States. Attackers gained access through a single VPN account — one that
-used a reused password and had no second factor of authentication required. The
-architectural security design of the network did not separate the business IT
-systems from the operational systems that control the physical pipeline. Once
-inside one, attackers could reach the other.
+**Colonial Pipeline, May 2021.** A six-day fuel shutdown across the Eastern
+United States, $4.4 million ransom paid, gas lines in multiple states.
 
-The company paid $4.4 million in ransom and shut down pipeline operations for
-six days. Gas prices spiked across the Eastern United States. Lines formed at
-fuel stations in multiple states.
+**The design error:** No second factor required on remote access, and no
+network segmentation between business IT systems and the operational systems
+that control the physical pipeline.
 
-The entry point was a single missing architectural decision: requiring a second
-factor of authentication on remote access. The blast radius was defined by a
-second missing decision: network segmentation between IT and operational
-systems. Neither required sophisticated code. Both required someone to ask
-the design question first.
+**Why vibe-coders make the same mistake:** AI-assisted builders add a login
+screen and consider auth "done." Nobody asks what happens after login —
+whether internal systems are separated from each other, or whether a single
+compromised account can reach everything. The perimeter gets built; the
+interior never gets divided.
+
+**What happened:** Attackers found a reused password for a VPN account that
+had no MFA requirement. They got in through that one account. Once inside the
+business IT network, there was no wall between it and the operational systems
+running the pipeline. Colonial shut down the pipeline themselves, preemptively,
+because they could not tell whether the attackers had reached the operational
+side. They had no way to know, because the architecture had not separated the
+two. The ransom bought a decryption key. The shutdown and the gas lines came
+from the architecture, not the ransomware.
+
+---
+
+**Equifax, July 2017.** 147 million Social Security numbers stolen — the
+largest breach of financial identity data on record at the time.
+
+**The design error:** No interior network segmentation. The web server tier
+could talk directly to the database tier. Once inside the web application,
+attackers had a straight line to the data. There was a perimeter. There were
+no internal boundaries.
+
+**Why vibe-coders make the same mistake:** AI tools generate database
+connection strings and query logic in the same layer as the web application
+code. Nothing in the scaffolding separates the tier that handles HTTP requests
+from the tier that holds sensitive data. The application works correctly, so
+nobody questions the topology. Segmentation is never part of the "make it
+work" phase, and there is no "make it safe" phase that follows.
+
+**What happened:** Apache Struts, the web framework Equifax used, had a
+publicly disclosed vulnerability. A patch had been available for two months.
+Equifax had not applied it. Attackers exploited the vulnerability to run
+commands on the web server. From the web server, they could query the
+databases directly — no additional credentials, no additional barrier. They
+spent 76 days moving through the network, copying data in small batches to
+avoid detection. The vulnerability was the entry point. The missing network
+segmentation was why 147 million records left instead of one server's worth.
+
+---
+
+**Uber, September 2022.** An 18-year-old attacker reached Uber's internal
+systems, admin dashboards, source code repositories, and internal Slack
+channels in a single session.
+
+**The design error:** Secrets hardcoded in internal scripts rather than a
+secrets store, and no separation between read and write access on internal
+tools. One compromised employee account could reach everything without
+privilege escalation.
+
+**Why vibe-coders make the same mistake:** When building internal tooling and
+automation scripts, AI assistants put credentials directly in the script
+because that is the fastest path to a working result. Internal tools get built
+quickly and never revisited. There is no moment where someone asks "what
+happens if someone gets access to this script?" because the script is internal
+and the focus was on making it work.
+
+**What happened:** The attacker used MFA fatigue — sending repeated
+authentication push notifications to an Uber employee's phone until the
+employee approved one, probably assuming it was a system glitch. That gave the
+attacker access to the employee's account on the corporate VPN. From there,
+they found an internal network share containing PowerShell scripts. Those
+scripts had admin credentials hardcoded in them — real credentials, not
+references to a secrets store. With those credentials, the attacker reached
+Uber's internal admin panels, its AWS and GCP environments, its HackerOne
+vulnerability reports, and its Slack workspace. The MFA fatigue was the entry
+point. The hardcoded credentials were why everything followed from it.
 
 ---
 

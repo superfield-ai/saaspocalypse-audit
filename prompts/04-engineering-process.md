@@ -64,30 +64,89 @@ or to roll back a specific change.
 
 ---
 
-## Real-world incident anchor (use for C or D grades)
+## Real-world incident anchors (use for C or D grades)
 
-**SolarWinds, December 2020.**
+---
 
-SolarWinds makes software used by 33,000 companies, including most US federal
-agencies. Attackers — later attributed to Russian intelligence — compromised
-SolarWinds' software build process. They injected malicious code into the build
-pipeline that assembled the Orion IT monitoring product.
+**SolarWinds, December 2020.** A nation-state attacker compromised the build
+pipeline of a major IT monitoring vendor and distributed malicious code to
+18,000 customers, including most US federal agencies, via a legitimate signed
+software update. The attacker had undetected access to government and corporate
+networks for up to nine months.
 
-Because SolarWinds' build pipeline had no mechanism to verify the integrity of
-what it assembled — no signing of intermediate artifacts, no comparison of
-expected versus actual build outputs — the malicious code was compiled into a
-legitimate, digitally signed software update. That update was then distributed
-through SolarWinds' normal update channel to 18,000 customers, who installed it
-trusting the digital signature.
+**The design error:** The build pipeline had no mechanism to verify its own
+integrity. There was no signing of intermediate artifacts, no comparison of
+expected versus actual build outputs. The pipeline assembled and signed whatever
+it was given.
 
-The attackers were inside government and corporate networks for up to nine
-months before detection. The investigation took years and its full scope was
-never determined.
+**Why vibe-coders make the same mistake:** AI-generated build pipelines are
+oriented around delivery — get it compiled, get it shipped. Integrity checks on
+the pipeline itself are a second-order concern that never makes it into the first
+draft. If you didn't design the pipeline to catch tampering, it won't.
 
-The attack succeeded not because of a code vulnerability, but because of a
-process gap: the build pipeline had no step that verified its own integrity.
-Engineering process is not bureaucracy. It is the set of checks that ensure
-the system produces what you think it produces.
+**What happened:** Attackers inserted a small malicious module into the source
+tree that SolarWinds' build system compiled into its Orion product. The output
+was code-signed by SolarWinds in the normal way, so every customer who applied
+the update received a backdoor that appeared to be a legitimate patch. The full
+scope of the breach was never determined. The investigation ran for years.
+
+---
+
+**Codecov, April 2021.** Attackers modified a bash script hosted by code
+coverage tool Codecov that was fetched and executed inside the CI pipelines of
+thousands of companies, including Twilio, Atlassian, and Rapid7. The modified
+script silently exfiltrated environment variables — including secrets, API keys,
+and tokens — from every pipeline that ran it. The compromise went undetected for
+two months.
+
+**The design error:** Codecov's CI uploader was distributed as a script fetched
+from a remote URL at runtime, with no integrity check. No hash verification, no
+signature validation. Any modification to the hosted file was automatically
+trusted by every downstream pipeline.
+
+**Why vibe-coders make the same mistake:** Fetching a script from a URL and
+piping it into bash is a common pattern in developer tooling and setup guides.
+AI-assisted pipelines reproduce this pattern without adding integrity checks
+because the pattern appears to work — until the remote file changes in a way
+you didn't intend. Pinning and verifying external artifacts is a discipline that
+requires knowing why it matters before you know to do it.
+
+**What happened:** Attackers gained access to Codecov's Docker image build
+process and modified the bash uploader script stored there. When customers' CI
+pipelines ran the Codecov step, they fetched the tampered script and executed
+it. The script collected all environment variables from the running pipeline —
+credentials, access tokens, signing keys — and sent them to an attacker-
+controlled server. Companies discovered the breach only after Codecov's own
+investigation surfaced it two months later.
+
+---
+
+**npm event-stream, November 2018.** A malicious maintainer took ownership of
+event-stream, an npm package with two million weekly downloads, and added a
+dependency that stole private keys from users of the Copay Bitcoin wallet.
+Hundreds of thousands of npm installs pulled in the malicious code before
+detection.
+
+**The design error:** npm's package ownership model allowed any package to be
+transferred to a new maintainer with no review process, regardless of how
+critical the package had become to the ecosystem. Ownership of critical
+infrastructure was transferable on the same terms as ownership of a personal
+project.
+
+**Why vibe-coders make the same mistake:** Dependency management in AI-assisted
+projects is typically about making something work, not about understanding who
+controls what you're pulling in. Lock files pin versions but they don't answer
+the question: who owns this package now, and do I trust them? That question
+requires a process that most teams — and essentially all AI-generated setups —
+never establish.
+
+**What happened:** The original author of event-stream transferred the package
+to a new contributor who had submitted a helpful-looking pull request. The new
+maintainer added a dependency called flatmap-stream that contained obfuscated
+malicious code targeting the Copay Bitcoin wallet. The malicious code was
+executed only when the Copay wallet app was running; all other users were
+unaffected, which delayed detection. By the time the attack was discovered,
+the malicious version had been installed hundreds of thousands of times.
 
 ---
 

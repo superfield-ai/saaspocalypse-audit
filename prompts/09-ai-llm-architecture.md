@@ -95,6 +95,20 @@ attack applies to any AI system that reads external content — emails, uploaded
 documents, database records, web pages — and treats the content of those
 sources as potentially containing instructions.
 
+**The design error:** The system made no architectural distinction between
+the AI's trusted instruction source (the system prompt) and untrusted external
+content (web pages the AI was asked to read). Both were processed in the same
+context window with the same authority.
+
+**Why vibe-coders make the same mistake:** When building AI features with
+LLM APIs, it feels natural to stuff everything into one prompt — the user's
+request, the retrieved document, the database record. The tutorial examples
+do exactly this. The idea that a document you're asking the AI to read could
+itself be issuing commands to the AI is not intuitive until you've been burned
+by it.
+
+---
+
 **Data leakage — Samsung, 2023.**
 
 Samsung employees, using ChatGPT to assist with work tasks, pasted proprietary
@@ -106,9 +120,76 @@ how that data would be handled.
 Samsung subsequently banned the use of generative AI tools on company devices.
 The data that was shared cannot be retrieved.
 
-The failure was architectural: the system had no policy, technical control, or
-awareness mechanism that governed what data employees could send to AI providers.
-"We didn't think about it" is not a data handling policy.
+**The design error:** The system had no policy, technical control, or awareness
+mechanism that governed what data employees could send to AI providers. There
+was no classification layer, no outbound data filter, and no DPA in place before
+employees began using external AI tools with internal data.
+
+**Why vibe-coders make the same mistake:** When you're building fast, you plug
+in the OpenAI SDK, pass it the data you have, and it works. The fact that
+you've just transmitted customer records or internal source code to a third
+party under that provider's standard retention terms is easy to miss when the
+focus is on making the feature work. "We didn't think about it" is not a data
+handling policy.
+
+---
+
+**Unauthorized commitment — Air Canada chatbot, 2024.**
+
+Air Canada deployed an AI chatbot to handle customer service inquiries. A
+customer who had recently lost a family member asked the chatbot about
+bereavement fares. The chatbot told him he could purchase a full-price ticket,
+then apply for a bereavement discount retroactively within 90 days of travel.
+That was false. Air Canada's actual policy required the discount to be requested
+before travel.
+
+The customer followed the chatbot's instructions, paid full price, and then
+applied for the discount after the trip. Air Canada refused, arguing that the
+chatbot's statements were not binding. The customer took the matter to a
+Canadian civil resolution tribunal. The tribunal ruled that Air Canada was
+liable for its chatbot's statements and ordered it to pay the difference.
+
+**The design error:** The chatbot had no constraint preventing it from making
+factual claims or commitments on Air Canada's behalf. There was no grounding
+mechanism that tied its answers to verified policy documents, and no escalation
+path — the AI could simply state company policy incorrectly, in writing, to a
+customer, with no human review before that statement was delivered.
+
+**Why vibe-coders make the same mistake:** Helpfulness is the primary objective
+when building a customer-facing assistant. Builders tune the AI to answer
+confidently rather than to hedge or escalate, because hedging feels like a
+worse user experience. The legal surface area of a confident wrong answer is
+not a programming concern — until a tribunal makes it one.
+
+---
+
+**Cross-user data exposure via AI summarization — Slack AI, 2024.**
+
+Slack launched an AI feature that could summarize channels and threads. Security
+researchers discovered that an attacker who had access to one channel could
+plant adversarial instructions in a message. When a user with access to a
+different private channel asked Slack AI to summarize content, the AI could
+be manipulated — through the planted instructions — to retrieve and surface
+content from the private channel the attacker could not directly read.
+
+The attack required no exploit of Slack's underlying access control system.
+The AI's context window included data from multiple sources, and the access
+controls governing what the AI could assemble into that context were weaker
+than the access controls governing direct channel membership.
+
+**The design error:** The AI feature's permission model was not derived from
+the platform's existing access control model. Data from different sources —
+with different access permissions — was combined into a single context window
+without enforcing the same boundaries that applied to direct access. The AI
+became a path around access controls that were otherwise correctly implemented.
+
+**Why vibe-coders make the same mistake:** When building AI features on top of
+an existing platform, the instinct is to give the AI as much context as
+possible so it can produce better answers. Feeding it adjacent data, related
+channels, or broader history feels like a feature. The idea that the AI's
+context window is itself an access control boundary — one that must enforce the
+same rules as every other access path — does not appear in any getting-started
+guide.
 
 ---
 
