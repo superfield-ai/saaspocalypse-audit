@@ -13,7 +13,7 @@ putting it in front of real users, real customers, or regulators.
 Paste this into your coding agent:
 
 ```
-Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/agent-bootstrap.md
+Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/AGENT-BOOTSTRAP.md
 ```
 
 Then run the audit from your project directory:
