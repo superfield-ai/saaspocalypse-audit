@@ -40,6 +40,14 @@ is currently making, not to pass a checklist.
 
 ### Step 1 — Install the skill
 
+**Paste this into your coding agent:**
+
+```
+Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/agent-bootstrap.md
+```
+
+Or install manually:
+
 **Global install** (recommended — available in every project):
 
 ```bash
