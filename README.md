@@ -46,36 +46,39 @@ is currently making, not to pass a checklist.
 Agent, install the saaspocalypse-audit skill. Follow the instructions at: https://raw.githubusercontent.com/superfield-ai/saaspocalypse-audit/main/agent-bootstrap.md
 ```
 
-Or install manually:
+Or install manually from your terminal:
 
-**Global install** (recommended — available in every project):
-
-```bash
-mkdir -p ~/.claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/heads/main.tar.gz \
-  | tar -xz --strip-components=1 -C ~/.claude/skills/saaspocalypse-audit && \
-echo "Installed globally. Run /saaspocalypse-audit from any project directory."
-```
-
-**Project install** (scoped to one project — run from your project root):
+**Project install** (default — scoped to this project):
 
 ```bash
+SAAS_VERSION=$(curl -fsSL https://api.github.com/repos/superfield-ai/saaspocalypse-audit/releases/latest | grep '"tag_name"' | cut -d'"' -f4) && \
 mkdir -p .claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/heads/main.tar.gz \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
   | tar -xz --strip-components=1 -C .claude/skills/saaspocalypse-audit && \
-echo "Installed for this project."
+echo "Installed ${SAAS_VERSION} for this project."
 ```
 
-**Pin to a specific version** (replace `v1.0.0` with the version you want):
+**Global install** (available in every project on this machine):
 
 ```bash
+SAAS_VERSION=$(curl -fsSL https://api.github.com/repos/superfield-ai/saaspocalypse-audit/releases/latest | grep '"tag_name"' | cut -d'"' -f4) && \
 mkdir -p ~/.claude/skills/saaspocalypse-audit && \
-curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/v1.0.0.tar.gz \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
   | tar -xz --strip-components=1 -C ~/.claude/skills/saaspocalypse-audit && \
-echo "Installed v1.0.0."
+echo "Installed ${SAAS_VERSION} globally."
 ```
 
-**Update to latest** — re-run the global install command. It overwrites in place.
+**Update** — re-run either command. It installs the latest release and overwrites in place.
+
+**Pin to a specific version** (replace `v0.0.1` with any release tag):
+
+```bash
+SAAS_VERSION=v0.0.1 && \
+mkdir -p .claude/skills/saaspocalypse-audit && \
+curl -fsSL https://github.com/superfield-ai/saaspocalypse-audit/archive/refs/tags/${SAAS_VERSION}.tar.gz \
+  | tar -xz --strip-components=1 -C .claude/skills/saaspocalypse-audit && \
+echo "Installed ${SAAS_VERSION}."
+```
 
 Requires [Claude Code](https://claude.ai/code). No git required.
 
