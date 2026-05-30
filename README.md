@@ -38,33 +38,37 @@ is currently making, not to pass a checklist.
 
 ## How to run it
 
-### Option A — From your project directory
+### Step 1 — Install the skill
 
-Install [Claude Code](https://claude.ai/code), navigate to your project, and
-run:
+Run this in your terminal. It installs the audit as a Claude Code skill:
+
+```bash
+git clone https://github.com/superfield-ai/saaspocalypse-audit /tmp/saaspocalypse-audit && \
+cp -r /tmp/saaspocalypse-audit ~/.claude/skills/saaspocalypse-audit && \
+rm -rf /tmp/saaspocalypse-audit && \
+echo "Installed. Run /saaspocalypse-audit from any project directory."
+```
+
+Requires [Claude Code](https://claude.ai/code) and [git](https://git-scm.com).
+
+### Step 2 — Run the audit
+
+**Option A — From your project directory:**
+
+Navigate to the root of the project you want to audit, open Claude Code, and run:
 
 ```
 /saaspocalypse-audit
 ```
 
-### Option B — Pass a git URL
+**Option B — Pass a git URL:**
 
 ```
 /saaspocalypse-audit https://github.com/your-org/your-repo
 ```
 
-The audit clones the repo, runs the full analysis, and removes the clone when
-finished. Works with public repos or any repo your git credentials can reach.
-
-### Installing the skill
-
-Copy `SKILL.md` and the `prompts/` directory into your Claude Code global
-skills directory:
-
-```bash
-git clone https://github.com/superfield-ai/saaspocalypse-audit
-cp -r saaspocalypse-audit ~/.claude/skills/saaspocalypse-audit
-```
+The audit clones the repo, runs the full analysis, then removes the clone.
+Works with any repo your git credentials can reach.
 
 ## What the audit will not do
 
