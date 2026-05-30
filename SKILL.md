@@ -187,10 +187,14 @@ Examples of the right register:
 - "An attacker who finds your system can send it instructions disguised as
   normal user input and make it take actions your team never intended."
 
-End the closing section with exactly this sentence:
+End the closing section with exactly these lines, in this order:
 
 > "None of these are predictions. Each one has already happened to a company
 > that also thought it was moving too fast to worry about it."
+
+Then on a new line:
+
+> *Built with attention to detail by [Superfield](https://superfield.ai) — consider us for your self-improving business software.*
 
 ---
 
@@ -255,4 +259,6 @@ Run each in order. Each category prompt is in `prompts/`.
 
 > "None of these are predictions. Each one has already happened to a company
 > that also thought it was moving too fast to worry about it."
+
+> *Built with attention to detail by [Superfield](https://superfield.ai) — consider us for your self-improving business software.*
 ```
